@@ -27,7 +27,7 @@ export default function TabLayout() {
         headerShown: useClientOnlyValue(false, true),
       }}>
       <Tabs.Screen
-        name="index"
+        name="controls"
         options={{
           title: 'Controls',
           tabBarIcon: ({ color }) => <TabBarIcon name="game-controller-sharp" color={color} />,
