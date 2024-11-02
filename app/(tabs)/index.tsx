@@ -1,14 +1,35 @@
 import { StyleSheet } from 'react-native';
 import { Text, View } from '@/components/Themed';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Slider from '@react-native-community/slider';
+import { useBluetooth } from 'rn-bluetooth-classic';
 
 export default function TabOneScreen() {
-  let [sliderValue1, setSliderValue1] = useState(0)
-  let [sliderValue2, setSliderValue2] = useState(0)
-  let [key1, setKey1] = useState(0)  // Add keys to force re-render
-  let [key2, setKey2] = useState(0)
-  
+  const { connectedDevice, writeToDevice } = useBluetooth();
+  const [sliderValue1, setSliderValue1] = useState(0);
+  const [sliderValue2, setSliderValue2] = useState(0);
+  const [key1, setKey1] = useState(0);  // Add keys to force re-render
+  const [key2, setKey2] = useState(0);
+
+  useEffect(() => {
+    if (connectedDevice) {
+      // Reset slider values when a device is connected
+      setSliderValue1(0);
+      setSliderValue2(0);
+    }
+  }, [connectedDevice]);
+
+  const handleSliderChange = async (value: number, sliderNumber: number) => {
+    if (connectedDevice) {
+      try {
+        const message = `M${sliderNumber}:${value}`;
+        await writeToDevice(message, 'utf8');
+      } catch (error) {
+        console.error('Failed to send message', error);
+      }
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Slider Controls</Text>
@@ -23,12 +44,17 @@ export default function TabOneScreen() {
               minimumValue={-255}
               maximumValue={255}
               value={sliderValue1}   // Set initial value directly
-              onValueChange={setSliderValue1}
+              onValueChange={(value) => {
+                setSliderValue1(value);
+                handleSliderChange(value, 1);
+              }}
               step={1}
+              disabled={!connectedDevice}
               onSlidingComplete={() => {
                 setSliderValue1(0);
                 setKey1(prev => prev + 1);  // Increment key to force re-render
-              }} />
+              }}
+            />
           </View>
           <Text style={styles.valueText}>{sliderValue1}</Text>
         </View>
@@ -41,12 +67,17 @@ export default function TabOneScreen() {
               minimumValue={-255}
               maximumValue={255}
               value={sliderValue2}   // Set initial value directly
-              onValueChange={setSliderValue2}
+              onValueChange={(value) => {
+                setSliderValue2(value);
+                handleSliderChange(value, 2);
+              }}
               step={1}
+              disabled={!connectedDevice}
               onSlidingComplete={() => {
                 setSliderValue2(0);
                 setKey2(prev => prev + 1);  // Increment key to force re-render
-              }} />
+              }}
+            />
           </View>
           <Text style={styles.valueText}>{sliderValue2}</Text>
         </View>
