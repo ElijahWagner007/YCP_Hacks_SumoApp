@@ -48,18 +48,18 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+          name="edit"
+          options={{
+            title: 'Edit',
+            tabBarIcon: ({ color }) => <TabBarIcon name="brush-sharp" color={color} />,
+          }}
+      />
+      <Tabs.Screen
         name="two"
         options={{
           title: 'Settings',
           tabBarIcon: ({ color }) => <TabBarIcon name="settings-sharp" color={color} />,
         }}
-      />
-      <Tabs.Screen
-          name="three"
-          options={{
-            title: 'Edit',
-            tabBarIcon: ({ color }) => <TabBarIcon name="brush-sharp" color={color} />,
-          }}
       />
     </Tabs>
   );
