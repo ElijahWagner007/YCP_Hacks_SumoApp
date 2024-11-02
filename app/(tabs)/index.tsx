@@ -8,14 +8,17 @@ export default function TabOneScreen() {
   const { connectedDevice, writeToDevice } = useBluetooth();
   const [sliderValue1, setSliderValue1] = useState(0);
   const [sliderValue2, setSliderValue2] = useState(0);
+  const [deviceName, setDeviceName] = useState("Unconnected");
   const [key1, setKey1] = useState(0);  // Add keys to force re-render
   const [key2, setKey2] = useState(0);
 
   useEffect(() => {
     if (connectedDevice) {
-      // Reset slider values when a device is connected
+      setDeviceName(connectedDevice.name);
       setSliderValue1(0);
       setSliderValue2(0);
+    } else {
+      setDeviceName("Unconnected");
     }
   }, [connectedDevice]);
 
@@ -32,7 +35,7 @@ export default function TabOneScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{connectedDevice?.name}</Text>
+      <Text style={styles.title}>{deviceName}</Text>
       <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
       
       <View style={styles.slidersContainer}>
