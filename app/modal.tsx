@@ -8,7 +8,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 
 
 export default function ModalScreen() {
-  const { isScanning, devices, scanForDevices, connectToDevice } = useBluetooth();
+  const { isScanning, devices, scanForDevices, connectToDevice, connectedDevice } = useBluetooth();
   const colorScheme = useColorScheme();
 
   useEffect(() => {
@@ -17,7 +17,7 @@ export default function ModalScreen() {
 
   const handleDevicePress = async (device: any) => {
     try {
-      await connectToDevice(device.id);
+      await connectToDevice(device.address);
       alert(`Connected to ${device.name}`);
     } catch (error) {
       alert(`Failed to connect to ${device.name}`);

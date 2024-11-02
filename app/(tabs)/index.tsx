@@ -22,8 +22,8 @@ export default function TabOneScreen() {
   const handleSliderChange = async (value: number, sliderNumber: number) => {
     if (connectedDevice) {
       try {
-        const message = `M${sliderNumber}:${value}`;
-        await writeToDevice(message, 'utf8');
+        const message = `m${sliderNumber}:${value}\n`
+        await writeToDevice(connectedDevice.address, message, 'utf8');
       } catch (error) {
         console.error('Failed to send message', error);
       }
@@ -32,7 +32,7 @@ export default function TabOneScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Slider Controls</Text>
+      <Text style={styles.title}>{connectedDevice?.name}</Text>
       <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
       
       <View style={styles.slidersContainer}>
@@ -53,6 +53,7 @@ export default function TabOneScreen() {
               onSlidingComplete={() => {
                 setSliderValue1(0);
                 setKey1(prev => prev + 1);  // Increment key to force re-render
+                handleSliderChange(0, 1);
               }}
             />
           </View>
@@ -75,7 +76,8 @@ export default function TabOneScreen() {
               disabled={!connectedDevice}
               onSlidingComplete={() => {
                 setSliderValue2(0);
-                setKey2(prev => prev + 1);  // Increment key to force re-render
+                setKey2(prev => prev + 1); // Increment key to force re-render
+                handleSliderChange(0, 2);
               }}
             />
           </View>
