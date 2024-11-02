@@ -1,25 +1,57 @@
+import React, { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { Platform, StyleSheet } from 'react-native';
-
+import { Platform, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useBluetooth } from 'rn-bluetooth-classic';
 import { Text, View } from '@/components/Themed';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { useColorScheme } from '@/components/useColorScheme';
+
 
 export default function ModalScreen() {
   const { isScanning, devices, scanForDevices, connectToDevice } = useBluetooth();
+  const colorScheme = useColorScheme();
+
+  useEffect(() => {
+    scanForDevices();
+  }, []);
+
+  const handleDevicePress = async (device: any) => {
+    try {
+      await connectToDevice(device.id);
+      alert(`Connected to ${device.name}`);
+    } catch (error) {
+      alert(`Failed to connect to ${device.name}`);
+    }
+  };
+
+  const renderItem = ({ item }: { item: any }) => (
+    <TouchableOpacity onPress={() => handleDevicePress(item)} style={styles.deviceItem}>
+      <Text>{item.name}</Text>
+    </TouchableOpacity>
+  );
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>SumoApp Info</Text>
-      
-      <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      <Text style={styles.text}>Use Controller Tab to control SumoBot</Text>
-     
-      <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      <Text style={styles.text}>Use the Settings Tab to manipulate motor control</Text>
-    
-      <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      <Text style={styles.text}>Use the Edit Tab to edit your Controller Layout</Text>
-
-      {/* Use a light status bar on iOS to account for the black space above the modal */}
+      <View style={styles.header}>
+        <Text style={styles.title}>Available Devices</Text>
+        <TouchableOpacity onPress={scanForDevices} disabled={isScanning}>
+          <Ionicons
+            name="refresh"
+            size={24}
+            color={isScanning ? 'gray' : (colorScheme === 'dark' ? 'white' : 'black')}
+            style={styles.refreshIcon}
+          />
+        </TouchableOpacity>
+      </View>
+      {isScanning ? (
+        <ActivityIndicator size="large" color="#0000ff" />
+      ) : (
+        <FlatList
+          data={devices}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+        />
+      )}
       <StatusBar style={Platform.OS === 'ios' ? 'light' : 'auto'} />
     </View>
   );
@@ -31,17 +63,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    paddingHorizontal: 20,
+    marginBottom: 10,
+  },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
   },
-  separator: {
-    marginVertical: 30,
-    height: 1,
-    width: '80%',
+  refreshIcon: {
+    marginLeft: 10,
   },
-  text: {
-    fontSize: 10,
-    fontWeight: 'regular',
+  deviceItem: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
   },
 });
