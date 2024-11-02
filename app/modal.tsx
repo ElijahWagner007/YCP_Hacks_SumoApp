@@ -8,10 +8,13 @@ export default function ModalScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>SumoApp Info</Text>
+      
       <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
       <Text style={styles.text}>Use Controller Tab to control SumoBot</Text>
+     
       <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
       <Text style={styles.text}>Use the Settings Tab to manipulate motor control</Text>
+    
       <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
       <Text style={styles.text}>Use the Edit Tab to edit your Controller Layout</Text>
 
