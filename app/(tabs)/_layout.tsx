@@ -29,14 +29,14 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Controlfs',
+          title: 'Control',
           tabBarIcon: ({ color }) => <TabBarIcon name="game-controller-sharp" color={color} />,
           headerRight: () => (
             <Link href="/modal" asChild>
               <Pressable>
                 {({ pressed }) => (
                   <Ionicons
-                    name="information-circle-sharp"
+                    name="bluetooth-sharp"
                     size={25}
                     color={Colors[colorScheme ?? 'light'].text}
                     style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
