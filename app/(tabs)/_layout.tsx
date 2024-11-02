@@ -27,9 +27,9 @@ export default function TabLayout() {
         headerShown: useClientOnlyValue(false, true),
       }}>
       <Tabs.Screen
-        name="controls"
+        name="index"
         options={{
-          title: 'Controls',
+          title: 'Controlfs',
           tabBarIcon: ({ color }) => <TabBarIcon name="game-controller-sharp" color={color} />,
           headerRight: () => (
             <Link href="/modal" asChild>
