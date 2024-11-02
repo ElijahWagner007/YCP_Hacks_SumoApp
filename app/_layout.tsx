@@ -3,8 +3,11 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
+
+import DeviceModal from "@/components/DeviceConnectionModal";
+import useBLE from "@/hooks/useBLE";
 
 import { useColorScheme } from '@/components/useColorScheme';
 
@@ -48,12 +51,49 @@ export default function RootLayout() {
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
 
+  const {
+    allDevices,
+    connectedDevice,
+    connectToDevice,
+    color,
+    requestPermissions,
+    scanForPeripherals,
+  } = useBLE();
+
+  const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
+
+  const scanForDevices = async () => {
+    const isPermissionsEnabled = await requestPermissions();
+    if (isPermissionsEnabled) {
+      scanForPeripherals();
+    }
+  };
+
+  const hideModal = () => {
+    setIsModalVisible(false);
+  };
+
+  const openModal = async () => {
+    scanForDevices();
+    setIsModalVisible(true);
+  };
+
+  // useEffect(() => {
+  //   openModal();
+  // });
+
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
       </Stack>
+      <DeviceModal
+        closeModal={hideModal}
+        visible={isModalVisible}
+        connectToPeripheral={connectToDevice}
+        devices={allDevices}
+      />
     </ThemeProvider>
   );
 }
