@@ -8,22 +8,25 @@ export default function TabOneScreen() {
   const { connectedDevice, writeToDevice } = useBluetooth();
   const [sliderValue1, setSliderValue1] = useState(0);
   const [sliderValue2, setSliderValue2] = useState(0);
+  const [deviceName, setDeviceName] = useState("Unconnected");
   const [key1, setKey1] = useState(0);  // Add keys to force re-render
   const [key2, setKey2] = useState(0);
 
   useEffect(() => {
     if (connectedDevice) {
-      // Reset slider values when a device is connected
+      setDeviceName(connectedDevice.name);
       setSliderValue1(0);
       setSliderValue2(0);
+    } else {
+      setDeviceName("Unconnected");
     }
   }, [connectedDevice]);
 
   const handleSliderChange = async (value: number, sliderNumber: number) => {
     if (connectedDevice) {
       try {
-        const message = `M${sliderNumber}:${value}`;
-        await writeToDevice(message, 'utf8');
+        const message = `m${sliderNumber}:${value}\n`
+        await writeToDevice(connectedDevice.address, message, 'utf8');
       } catch (error) {
         console.error('Failed to send message', error);
       }
@@ -32,7 +35,7 @@ export default function TabOneScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Slider Controls</Text>
+      <Text style={styles.title}>{deviceName}</Text>
       <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
       
       <View style={styles.slidersContainer}>
@@ -53,6 +56,7 @@ export default function TabOneScreen() {
               onSlidingComplete={() => {
                 setSliderValue1(0);
                 setKey1(prev => prev + 1);  // Increment key to force re-render
+                handleSliderChange(0, 1);
               }}
             />
           </View>
@@ -75,7 +79,8 @@ export default function TabOneScreen() {
               disabled={!connectedDevice}
               onSlidingComplete={() => {
                 setSliderValue2(0);
-                setKey2(prev => prev + 1);  // Increment key to force re-render
+                setKey2(prev => prev + 1); // Increment key to force re-render
+                handleSliderChange(0, 2);
               }}
             />
           </View>
