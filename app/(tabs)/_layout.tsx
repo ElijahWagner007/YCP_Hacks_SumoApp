@@ -59,7 +59,7 @@ export default function TabLayout() {
         }}
       />
 
-      <Tabs.Screen
+      {/* <Tabs.Screen
           name="edit"
           options={{
             title: 'Edit',
@@ -79,7 +79,7 @@ export default function TabLayout() {
               </Link>
               )
           }}
-      />
+      /> */}
       <Tabs.Screen
         name="settings"
         options={{
