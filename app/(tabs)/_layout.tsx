@@ -31,6 +31,21 @@ export default function TabLayout() {
         options={{
           title: 'Control',
           tabBarIcon: ({ color }) => <TabBarIcon name="game-controller-sharp" color={color} />,
+        }}
+      />
+
+      <Tabs.Screen
+          name="edit"
+          options={{
+            title: 'Edit',
+            tabBarIcon: ({ color }) => <TabBarIcon name="brush-sharp" color={color} />,
+          }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: 'Settings',
+          tabBarIcon: ({ color }) => <TabBarIcon name="settings-sharp" color={color} />,
           headerRight: () => (
             <Link href="/modal" asChild>
               <Pressable>
@@ -44,21 +59,7 @@ export default function TabLayout() {
                 )}
               </Pressable>
             </Link>
-          ),
-        }}
-      />
-      <Tabs.Screen
-          name="edit"
-          options={{
-            title: 'Edit',
-            tabBarIcon: ({ color }) => <TabBarIcon name="brush-sharp" color={color} />,
-          }}
-      />
-      <Tabs.Screen
-        name="settings"
-        options={{
-          title: 'Settings',
-          tabBarIcon: ({ color }) => <TabBarIcon name="settings-sharp" color={color} />,
+            )
         }}
       />
     </Tabs>

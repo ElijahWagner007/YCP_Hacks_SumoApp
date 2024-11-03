@@ -1,0 +1,158 @@
+import React, { useRef, useState, useEffect } from 'react';
+import { View, Text, PanResponder, StyleSheet } from 'react-native';
+import Svg, { Line, Circle } from 'react-native-svg';
+import { useBluetooth } from 'rn-bluetooth-classic';
+
+export default function LineDrawer() {
+  const maxRadius = 150; // Boundary radius
+  const [lineCoordinates, setLineCoordinates] = useState({
+    startX: 0,
+    startY: 0,
+    endX: 0,
+    endY: 0,
+  });
+
+  const { connectedDevice, writeToDevice } = useBluetooth();
+
+  // Function to handle joystick movements
+  const handleJoystickChange = async () => {
+    if (connectedDevice) {
+      try {
+        const X_Power = -(lineCoordinates.endX - lineCoordinates.startX) / maxRadius;
+        const Y_Power = -(lineCoordinates.endY - lineCoordinates.startY) / maxRadius;
+
+        // Calculate motor powers based on joystick positions
+        const m1_Power = Math.round((Y_Power - X_Power) * 255);
+        const m2_Power = Math.round((Y_Power + X_Power) * 255);
+
+        const message1 = `m1/${m1_Power}\n`;
+        const message2 = `m2/${m2_Power}\n`;
+
+        await writeToDevice(connectedDevice.address, message1, 'utf8');
+        await writeToDevice(connectedDevice.address, message2, 'utf8');
+      } catch (error) {
+        console.error('Failed to send message', error);
+      }
+    }
+  };
+
+  // Trigger handleJoystickChange whenever endX or endY changes
+  useEffect(() => {
+    handleJoystickChange();
+  }, [lineCoordinates]);
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onPanResponderGrant: (evt) => {
+        const { locationX, locationY } = evt.nativeEvent;
+        setLineCoordinates({
+          startX: locationX,
+          startY: locationY,
+          endX: locationX,
+          endY: locationY,
+        });
+      },
+      onPanResponderMove: (evt, gestureState) => {
+        const dx = gestureState.dx;
+        const dy = gestureState.dy;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        // Limit the end point to within the boundary circle
+        const limitedDx = distance > maxRadius ? (dx / distance) * maxRadius : dx;
+        const limitedDy = distance > maxRadius ? (dy / distance) * maxRadius : dy;
+
+        setLineCoordinates((prev) => ({
+          ...prev,
+          endX: prev.startX + limitedDx,
+          endY: prev.startY + limitedDy,
+        }));
+      },
+      onPanResponderRelease: () => {
+        // Reset coordinates to hide the line and circle
+        setLineCoordinates({
+          startX: 0,
+          startY: 0,
+          endX: 0,
+          endY: 0,
+        });
+      },
+    })
+  ).current;
+
+  const calculateMagnitude = () => {
+    const dx = lineCoordinates.endX - lineCoordinates.startX;
+    const dy = lineCoordinates.endY - lineCoordinates.startY;
+    return Math.sqrt(dx * dx + dy * dy);
+  };
+
+  const calculateAngle = () => {
+    const dx = lineCoordinates.endX - lineCoordinates.startX;
+    const dy = lineCoordinates.endY - lineCoordinates.startY;
+    if (dx === 0) {
+      return dy > 0 ? 90 : -90; // Handle vertical lines
+    }
+    const angle = Math.atan(dy / dx) * (180 / Math.PI);
+    return angle.toFixed(2);
+  };
+
+  const magnitude = calculateMagnitude();
+  const circleRadius = magnitude / 4;
+
+  return (
+    <View style={styles.container} {...panResponder.panHandlers}>
+      <Svg height="100%" width="100%" style={StyleSheet.absoluteFill}>
+        {/* Boundary circle */}
+        {magnitude > 0 && (
+          <Circle
+            cx={lineCoordinates.startX}
+            cy={lineCoordinates.startY}
+            r={maxRadius}
+            stroke="white"
+            strokeWidth="1"
+            fill="none"
+          />
+        )}
+        {/* Line and endpoint circle */}
+        {magnitude > 0 && (
+          <>
+            <Line
+              x1={lineCoordinates.startX}
+              y1={lineCoordinates.startY}
+              x2={lineCoordinates.endX}
+              y2={lineCoordinates.endY}
+              stroke="#018577" // Stick color
+              strokeWidth="2"
+            />
+            <Circle
+              cx={lineCoordinates.endX}
+              cy={lineCoordinates.endY}
+              r={circleRadius}
+              fill="#018577" // Ball color
+            />
+          </>
+        )}
+      </Svg>
+      <Text style={styles.coordinates}>
+        Start: ({lineCoordinates.startX.toFixed(2)}, {lineCoordinates.startY.toFixed(2)}){'\n'}
+        End: ({lineCoordinates.endX.toFixed(2)}, {lineCoordinates.endY.toFixed(2)}){'\n'}
+        Angle: {calculateAngle()}°{'\n'}
+        Length: {magnitude.toFixed(2)}
+      </Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#000000', // Background color
+  },
+  coordinates: {
+    position: 'absolute',
+    bottom: 50,
+    left: 10,
+    fontSize: 16,
+    color: 'white', // Text color
+  },
+});
