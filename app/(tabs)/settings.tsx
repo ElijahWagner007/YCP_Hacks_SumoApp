@@ -108,22 +108,22 @@ export default function TabTwoScreen() {
             <Text style={[styles.tableRowText, { color: textColor }]}>M{index + 1}</Text>
                         <TextInput
               style={[styles.tableInput, { color: textColor }]}
-              placeholder={`Pin A`}
+              placeholder={``}
               placeholderTextColor={textColor}
               keyboardType="numeric"
-              value={pin.toString()}
+              value={isNaN(pin) || pin === -1 ? '' : pin.toString()}
               onChangeText={(value) => {
                 const newMotorPinA = [...motorPinA];
-                newMotorPinA[index] = value === '' ? '' : parseInt(value, 10);
+                newMotorPinA[index] = value === '' ? -1 : parseInt(value, 10);
                 setMotorPinA(newMotorPinA);
               }}
             />
             <TextInput
               style={[styles.tableInput, { color: textColor }]}
-              placeholder={`Pin B`}
+              placeholder={``}
               placeholderTextColor={textColor}
               keyboardType="numeric"
-              value={motorPinB[index].toString()}
+              value={isNaN(motorPinB[index]) || motorPinB[index] === -1 ? '' : motorPinB[index].toString()}
               onChangeText={(value) => {
                 const newMotorPinB = [...motorPinB];
                 newMotorPinB[index] = value === '' ? -1 : parseInt(value, 10);
