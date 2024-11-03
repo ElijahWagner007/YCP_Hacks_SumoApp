@@ -20,13 +20,13 @@ function TabBarIcon(props: {
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const { connectedDevice, writeToDevice } = useBluetooth();
-  const [deviceName, setDeviceName] = useState("Unconnected");
+  const [deviceName, setDeviceName] = useState("Disconnected");
 
   useEffect(() => {
     if (connectedDevice) {
       setDeviceName(connectedDevice.name);
     } else {
-      setDeviceName("Unconnected");
+      setDeviceName("Disconnected");
     }
   }, [connectedDevice]);
   return (

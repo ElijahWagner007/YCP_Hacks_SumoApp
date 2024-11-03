@@ -5,13 +5,28 @@ import Slider from '@react-native-community/slider';
 import { useState, useEffect } from 'react';
 import { useBluetooth } from 'rn-bluetooth-classic';
 
+import { DeviceMotion } from 'expo-sensors';
+
 export default function TabOneScreen() {
   const { connectedDevice, writeToDevice } = useBluetooth();
   const [sliderValue1, setSliderValue1] = useState(0);
   const [sliderValue2, setSliderValue2] = useState(0);
-  const [deviceName, setDeviceName] = useState("Unconnected");
+  const [deviceName, setDeviceName] = useState("Disconnected");
   const [key1, setKey1] = useState(0);  // Add keys to force re-render
   const [key2, setKey2] = useState(0);
+
+  const [orientation, setOrientation] = useState("Portrait");
+
+  useEffect(() => {
+    DeviceMotion.addListener((motionData) => {
+      if (motionData.orientation == 0 || motionData.orientation == 180) {
+        setOrientation("Portrait");
+      } else {
+        setOrientation("Landscape");
+      }
+      return () => DeviceMotion.removeAllListeners();
+    });
+  }, []);
 
   useEffect(() => {
     if (connectedDevice) {
@@ -19,7 +34,7 @@ export default function TabOneScreen() {
       setSliderValue1(0);
       setSliderValue2(0);
     } else {
-      setDeviceName("Unconnected");
+      setDeviceName("Disconnected");
     }
   }, [connectedDevice]);
 
@@ -34,17 +49,61 @@ export default function TabOneScreen() {
     }
   };
 
+  const getStyles = (orientation: string) => {
+    if (orientation === "Landscape") {
+      return {
+        sliderColumn: {
+          alignItems: 'center',
+          height: 140, // Original height
+          width: 100, // Adjusted width
+        },
+        sliderWrapper: {
+          height: 100, // Original height
+          width: 40, // Adjusted width
+          justifyContent: 'center',
+          alignItems: 'center',
+        },
+        slider: {
+          width: 100, // Original width
+          height: 40, // Adjusted height
+          transform: [{ rotate: '-90deg' }], // Original rotation
+        },
+      };
+    } else {
+      return {
+        sliderColumn: {
+          alignItems: 'center',
+          height: 340, // Original height
+          width: 100, // Adjusted width
+        },
+        sliderWrapper: {
+          height: 300, // Original height
+          width: 40, // Adjusted width
+          justifyContent: 'center',
+          alignItems: 'center',
+        },
+        slider: {
+          width: 300, // Original width
+          height: 40, // Adjusted height
+          transform: [{ rotate: '-90deg' }], // Original rotation
+        },
+      };
+    }
+  };
+
+  const dynamicStyles = getStyles(orientation);
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{deviceName}</Text>
       <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
       
       <View style={styles.slidersContainer}>
-        <View style={styles.sliderColumn}>
-          <View style={styles.sliderWrapper}>
+        <View style={dynamicStyles.sliderColumn}>
+          <View style={dynamicStyles.sliderWrapper}>
             <Slider
               key={key1}  // Add key prop
-              style={styles.slider}
+              style={dynamicStyles.slider}
               minimumValue={-255}
               maximumValue={255}
               value={sliderValue1}   // Set initial value directly
@@ -64,11 +123,11 @@ export default function TabOneScreen() {
           <Text style={styles.valueText}>{sliderValue1}</Text>
         </View>
 
-        <View style={styles.sliderColumn}>
-          <View style={styles.sliderWrapper}>
+        <View style={dynamicStyles.sliderColumn}>
+          <View style={dynamicStyles.sliderWrapper}>
             <Slider
               key={key2}  // Add key prop
-              style={styles.slider}
+              style={dynamicStyles.slider}
               minimumValue={-255}
               maximumValue={255}
               value={sliderValue2}   // Set initial value directly
@@ -111,21 +170,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 100,
-  },
-  sliderColumn: {
-    alignItems: 'center',
-    height: 340, // Enough height for slider + text
-  },
-  sliderWrapper: {
-    height: 300,
-    width: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  slider: {
-    width: 300,
-    height: 40,
-    transform: [{ rotate: '-90deg' }],
   },
   valueText: {
     marginTop: 10,
