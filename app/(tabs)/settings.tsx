@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, TextInput, Button, FlatList, TouchableOpacity, Alert } from 'react-native';
-import { Text, View } from '@/components/Themed';
+import { StyleSheet, TextInput, Button, FlatList, TouchableOpacity, Alert, View } from 'react-native';
+import { Text } from '@/components/Themed';
 import { useBluetooth } from 'rn-bluetooth-classic';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from '@/components/useColorScheme';
@@ -52,13 +52,22 @@ export default function TabTwoScreen() {
       motorPinB,
     };
     const settingsString = JSON.stringify(settings);
-    const encodedSettings = base64.encode(settingsString);
     try {
-      await writeToDevice(connectedDevice?.address, `s/${encodedSettings}\n`, 'utf8');
+      await writeToDevice(connectedDevice?.address, `s/${settingsString}\n`, 'utf8');
       Alert.alert('Success', 'Settings saved successfully');
     } catch (error) {
       console.error('Failed to save settings', error);
       Alert.alert('Error', 'Failed to save settings');
+    }
+  };
+
+  const restartESP32 = async () => {
+    try {
+      await writeToDevice(connectedDevice?.address, 'r\n', 'utf8');
+      Alert.alert('Success', 'ESP32 restarted successfully');
+    } catch (error) {
+      console.error('Failed to restart ESP32', error);
+      Alert.alert('Error', 'Failed to restart ESP32');
     }
   };
 
@@ -69,6 +78,11 @@ export default function TabTwoScreen() {
     } else {
       Alert.alert('Error', 'Maximum of 4 motors allowed');
     }
+  };
+
+  const deleteMotor = (index: number) => {
+    setMotorPinA(motorPinA.filter((_, i) => i !== index));
+    setMotorPinB(motorPinB.filter((_, i) => i !== index));
   };
 
   const textColor = colorScheme === 'dark' ? 'white' : 'black';
@@ -96,10 +110,11 @@ export default function TabTwoScreen() {
           <Text style={[styles.tableHeaderText, { color: textColor }]}>Motor</Text>
           <Text style={[styles.tableHeaderText, { color: textColor }]}>Pin A</Text>
           <Text style={[styles.tableHeaderText, { color: textColor }]}>Pin B</Text>
+          <Text style={[styles.tableHeaderText, { color: textColor }]}>Remove</Text>
         </View>
         {motorPinA.map((pin, index) => (
           <View key={index} style={styles.tableRow}>
-            <Text style={[styles.tableRowText, { color: textColor }]}>Motor {index + 1}</Text>
+            <Text style={[styles.tableRowText, { color: textColor }]}>M{index + 1}</Text>
             <TextInput
               style={[styles.tableInput, { color: textColor }]}
               placeholder={`Pin A`}
@@ -124,13 +139,19 @@ export default function TabTwoScreen() {
                 setMotorPinB(newMotorPinB);
               }}
             />
+            <TouchableOpacity onPress={() => deleteMotor(index)} style={styles.deleteButton}>
+              <Ionicons name="close" size={24} color="red" />
+            </TouchableOpacity>
           </View>
         ))}
       </View>
       <TouchableOpacity onPress={addMotor} style={styles.addButton}>
         <Text style={styles.addButtonText}>Add Motor</Text>
       </TouchableOpacity>
-      <Button title="Save Settings" onPress={saveSettings} />
+      <View style={styles.buttonContainer}>
+        <Button title="Save Settings" onPress={saveSettings} />
+        <Button title="Restart ESP32" onPress={restartESP32} />
+      </View>
     </View>
   );
 }
@@ -203,6 +224,11 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: 'center',
   },
+  deleteButton: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 10,
+  },
   addButton: {
     backgroundColor: '#007BFF',
     padding: 10,
@@ -213,7 +239,10 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
   },
-  data: {
-    marginTop: 20,
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    width: '100%',
+    marginBottom: 20,
   },
 });

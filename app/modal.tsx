@@ -11,9 +11,9 @@ export default function ModalScreen() {
   const { isScanning, devices, scanForDevices, connectToDevice, connectedDevice } = useBluetooth();
   const colorScheme = useColorScheme();
 
-  useEffect(() => {
-    scanForDevices();
-  }, []);
+  // useEffect(() => {
+  //   scanForDevices();
+  // }, []);
 
   const handleDevicePress = async (device: any) => {
     try {
