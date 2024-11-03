@@ -1,0 +1,5 @@
+{
+    "motorPinA": [13, 27],
+    "motorPinB": [12, 26],
+    "name": "SumoBot"
+}
