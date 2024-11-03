@@ -1,17 +1,23 @@
 import { StyleSheet } from 'react-native';
 import { Text, View } from '@/components/Themed';
 import Slider from '@react-native-community/slider';
-
 import { useState, useEffect } from 'react';
 import { useBluetooth } from 'rn-bluetooth-classic';
+import * as ScreenOrientation from 'expo-screen-orientation';
+
 
 export default function TabOneScreen() {
   const { connectedDevice, writeToDevice } = useBluetooth();
   const [sliderValue1, setSliderValue1] = useState(0);
   const [sliderValue2, setSliderValue2] = useState(0);
   const [deviceName, setDeviceName] = useState("Unconnected");
-  const [key1, setKey1] = useState(0);  // Add keys to force re-render
-  const [key2, setKey2] = useState(0);
+  const [key1, setKey1] = useState(0);
+  const [key2, setKey2] = useState(0);  
+
+  let isLandscape: boolean = false;
+  useEffect(() => {
+    isLandscape = !isLandscape
+  }, [ScreenOrientation.Orientation]);
 
   useEffect(() => {
     if (connectedDevice) {
@@ -26,7 +32,7 @@ export default function TabOneScreen() {
   const handleSliderChange = async (value: number, sliderNumber: number) => {
     if (connectedDevice) {
       try {
-        const message = `m${sliderNumber}/${value}\n`
+        const message = `m${sliderNumber}/${value}\n`;
         await writeToDevice(connectedDevice.address, message, 'utf8');
       } catch (error) {
         console.error('Failed to send message', error);
@@ -34,59 +40,50 @@ export default function TabOneScreen() {
     }
   };
 
+  
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>{deviceName}</Text>
-      <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      
-      <View style={styles.slidersContainer}>
-        <View style={styles.sliderColumn}>
-          <View style={styles.sliderWrapper}>
-            <Slider
-              key={key1}  // Add key prop
-              style={styles.slider}
-              minimumValue={-255}
-              maximumValue={255}
-              value={sliderValue1}   // Set initial value directly
-              onValueChange={(value) => {
-                setSliderValue1(value);
-                handleSliderChange(value, 1);
-              }}
-              step={1}
-              disabled={!connectedDevice}
-              onSlidingComplete={() => {
-                setSliderValue1(0);
-                setKey1(prev => prev + 1);  // Increment key to force re-render
-                handleSliderChange(0, 1);
-              }}
-            />
+    <View style={styles.container}>   
+      <View style={[
+          styles.slidersContainer, 
+          isLandscape ? styles.slidersContainerLandscape : styles.slidersContainerPortrait
+        ]}
+      >
+        {[1, 2].map((slider, index) => (
+          <View style={styles.sliderColumn} key={slider}>
+            <View style={styles.sliderWrapper}>
+              <Slider
+                key={index === 0 ? key1 : key2}
+                style={styles.slider}
+                minimumValue={-255}
+                maximumValue={255}
+                value={index === 0 ? sliderValue1 : sliderValue2}
+                onValueChange={(value) => {
+                  if (index === 0) {
+                    setSliderValue1(value);
+                    handleSliderChange(value, 1);
+                  } else {
+                    setSliderValue2(value);
+                    handleSliderChange(value, 2);
+                  }
+                }}
+                step={1}
+                disabled={!connectedDevice}
+                onSlidingComplete={() => {
+                  if (index === 0) {
+                    setSliderValue1(0);
+                    setKey1(prev => prev + 1);
+                    handleSliderChange(0, 1);
+                  } else {
+                    setSliderValue2(0);
+                    setKey2(prev => prev + 1);
+                    handleSliderChange(0, 2);
+                  }
+                }}
+              />
+            </View>
+            <Text style={styles.valueText}>{index === 0 ? sliderValue1 : sliderValue2}</Text>
           </View>
-          <Text style={styles.valueText}>{sliderValue1}</Text>
-        </View>
-
-        <View style={styles.sliderColumn}>
-          <View style={styles.sliderWrapper}>
-            <Slider
-              key={key2}  // Add key prop
-              style={styles.slider}
-              minimumValue={-255}
-              maximumValue={255}
-              value={sliderValue2}   // Set initial value directly
-              onValueChange={(value) => {
-                setSliderValue2(value);
-                handleSliderChange(value, 2);
-              }}
-              step={1}
-              disabled={!connectedDevice}
-              onSlidingComplete={() => {
-                setSliderValue2(0);
-                setKey2(prev => prev + 1); // Increment key to force re-render
-                handleSliderChange(0, 2);
-              }}
-            />
-          </View>
-          <Text style={styles.valueText}>{sliderValue2}</Text>
-        </View>
+        ))}
       </View>
     </View>
   );
@@ -99,22 +96,25 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   title: {
-    fontSize: 20,
     fontWeight: 'bold',
   },
   separator: {
-    marginVertical: 30,
     height: 1,
     width: '80%',
   },
   slidersContainer: {
     flexDirection: 'row',
+  },
+  slidersContainerPortrait: {
     alignItems: 'flex-start',
     gap: 100,
   },
+  slidersContainerLandscape: {
+    alignItems: 'center',
+    gap: 50,
+  },
   sliderColumn: {
     alignItems: 'center',
-    height: 340, // Enough height for slider + text
   },
   sliderWrapper: {
     height: 300,

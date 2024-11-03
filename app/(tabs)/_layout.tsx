@@ -6,6 +6,8 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
+import { useEffect, useState } from 'react';
+import { useBluetooth } from 'rn-bluetooth-classic';
 
 // You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
 function TabBarIcon(props: {
@@ -17,7 +19,16 @@ function TabBarIcon(props: {
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const { connectedDevice, writeToDevice } = useBluetooth();
+  const [deviceName, setDeviceName] = useState("Unconnected");
 
+  useEffect(() => {
+    if (connectedDevice) {
+      setDeviceName(connectedDevice.name);
+    } else {
+      setDeviceName("Unconnected");
+    }
+  }, [connectedDevice]);
   return (
     <Tabs
       screenOptions={{
@@ -29,8 +40,22 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Control',
+          title: deviceName, // I maybe shoudln't have this here
           tabBarIcon: ({ color }) => <TabBarIcon name="game-controller-sharp" color={color} />,
+          headerRight: () => (
+            <Link href="/modal" asChild>
+              <Pressable>
+                {({ pressed }) => (
+                  <Ionicons
+                    name="bluetooth-sharp"
+                    size={25}
+                    color={Colors[colorScheme ?? 'light'].text}
+                    style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
+                  />
+                )}
+              </Pressable>
+            </Link>
+            )
         }}
       />
 
@@ -39,6 +64,20 @@ export default function TabLayout() {
           options={{
             title: 'Edit',
             tabBarIcon: ({ color }) => <TabBarIcon name="brush-sharp" color={color} />,
+            headerRight: () => (
+              <Link href="/modal" asChild>
+                <Pressable>
+                  {({ pressed }) => (
+                    <Ionicons
+                      name="bluetooth-sharp"
+                      size={25}
+                      color={Colors[colorScheme ?? 'light'].text}
+                      style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
+                    />
+                  )}
+                </Pressable>
+              </Link>
+              )
           }}
       />
       <Tabs.Screen
