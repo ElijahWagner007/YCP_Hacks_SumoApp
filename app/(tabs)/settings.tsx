@@ -149,8 +149,12 @@ export default function TabTwoScreen() {
         <Text style={styles.addButtonText}>Add Motor</Text>
       </TouchableOpacity>
       <View style={styles.buttonContainer}>
-        <Button title="Save Settings" onPress={saveSettings} />
-        <Button title="Restart ESP32" onPress={restartESP32} />
+        <View style={styles.buttonWrapper}>
+            <Button title="Save Settings" onPress={saveSettings} />
+        </View>
+        <View style={styles.buttonWrapper}>
+          <Button title="Restart ESP32" onPress={restartESP32} />
+        </View>
       </View>
     </View>
   );
@@ -244,5 +248,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: '100%',
     marginBottom: 20,
+  },
+  buttonWrapper: {
+    marginHorizontal: 10,
   },
 });
