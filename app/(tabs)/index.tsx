@@ -1,7 +1,8 @@
 import { StyleSheet } from 'react-native';
 import { Text, View } from '@/components/Themed';
-import { useState, useEffect } from 'react';
 import Slider from '@react-native-community/slider';
+
+import { useState, useEffect } from 'react';
 import { useBluetooth } from 'rn-bluetooth-classic';
 
 export default function TabOneScreen() {
@@ -25,7 +26,7 @@ export default function TabOneScreen() {
   const handleSliderChange = async (value: number, sliderNumber: number) => {
     if (connectedDevice) {
       try {
-        const message = `m${sliderNumber}:${value}\n`
+        const message = `m${sliderNumber}/${value}\n`
         await writeToDevice(connectedDevice.address, message, 'utf8');
       } catch (error) {
         console.error('Failed to send message', error);
