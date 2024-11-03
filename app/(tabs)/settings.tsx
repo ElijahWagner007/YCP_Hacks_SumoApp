@@ -10,10 +10,8 @@ export default function TabTwoScreen() {
   const colorScheme = useColorScheme();
   const { connectedDevice, writeToDevice, receivedData } = useBluetooth();
   const [name, setName] = useState('');
-  const [motorPinA, setMotorPinA] = useState<number[]>([]);
-  const [motorPinB, setMotorPinB] = useState<number[]>([]);
-  const [incomingData, setIncomingData] = useState('');
-
+  const [motorPinA, setMotorPinA] = useState<any[]>([]);
+  const [motorPinB, setMotorPinB] = useState<any[]>([]);
   useEffect(() => {
     if (connectedDevice) {
       fetchSettings();
@@ -30,7 +28,6 @@ export default function TabTwoScreen() {
         setName(parsedData.name);
         setMotorPinA(parsedData.motorPinA);
         setMotorPinB(parsedData.motorPinB);
-        setIncomingData(JSON.stringify(parsedData, null, 2)); // Pretty print JSON
       } catch (error) {
         console.error('Failed to decode or parse JSON:', error);
       }
@@ -89,12 +86,6 @@ export default function TabTwoScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: textColor }]}>Settings</Text>
-        <TouchableOpacity onPress={fetchSettings} style={styles.refreshButton}>
-          <Ionicons name="refresh" size={24} color={textColor} />
-        </TouchableOpacity>
-      </View>
       <View style={styles.nameContainer}>
         <Text style={[styles.label, { color: textColor }]}>Name:</Text>
         <TextInput
@@ -115,7 +106,7 @@ export default function TabTwoScreen() {
         {motorPinA.map((pin, index) => (
           <View key={index} style={styles.tableRow}>
             <Text style={[styles.tableRowText, { color: textColor }]}>M{index + 1}</Text>
-            <TextInput
+                        <TextInput
               style={[styles.tableInput, { color: textColor }]}
               placeholder={`Pin A`}
               placeholderTextColor={textColor}
@@ -123,7 +114,7 @@ export default function TabTwoScreen() {
               value={pin.toString()}
               onChangeText={(value) => {
                 const newMotorPinA = [...motorPinA];
-                newMotorPinA[index] = parseInt(value, 10);
+                newMotorPinA[index] = value === '' ? '' : parseInt(value, 10);
                 setMotorPinA(newMotorPinA);
               }}
             />
@@ -135,7 +126,7 @@ export default function TabTwoScreen() {
               value={motorPinB[index].toString()}
               onChangeText={(value) => {
                 const newMotorPinB = [...motorPinB];
-                newMotorPinB[index] = parseInt(value, 10);
+                newMotorPinB[index] = value === '' ? -1 : parseInt(value, 10);
                 setMotorPinB(newMotorPinB);
               }}
             />
@@ -149,6 +140,9 @@ export default function TabTwoScreen() {
         <Text style={styles.addButtonText}>Add Motor</Text>
       </TouchableOpacity>
       <View style={styles.buttonContainer}>
+        <TouchableOpacity onPress={fetchSettings} style={styles.refreshButton}>
+          <Ionicons name="refresh" size={24} color={textColor} />
+        </TouchableOpacity>
         <View style={styles.buttonWrapper}>
             <Button title="Save Settings" onPress={saveSettings} />
         </View>
@@ -166,15 +160,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 20,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginRight: 10,
   },
   refreshButton: {
     padding: 10,
