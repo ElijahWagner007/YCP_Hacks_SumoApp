@@ -156,9 +156,20 @@ void loop() {
       String settingsContent = file.readString();
       file.close();
 
-      // Send the contents back to the connected Bluetooth device
-      SerialBT.println(settingsContent);
-      Serial.println("Sent settings.json content");
+      // Parse and stringify the JSON content
+      DynamicJsonDocument doc(1024);
+      DeserializationError error = deserializeJson(doc, settingsContent);
+      if (error) {
+        Serial.println("Failed to parse JSON");
+        return;
+      }
+
+      String compactSettingsContent;
+      serializeJson(doc, compactSettingsContent);
+
+      // Send the compact JSON content back to the connected Bluetooth device
+      SerialBT.println(compactSettingsContent);
+      Serial.println("Sent compact settings.json content");
     }
   }
   delay(20);
