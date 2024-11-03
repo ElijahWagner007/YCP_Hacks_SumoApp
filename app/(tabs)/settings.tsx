@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, TextInput, Button, FlatList, TouchableOpacity } from 'react-native';
+import { StyleSheet, TextInput, Button, FlatList, TouchableOpacity, Alert } from 'react-native';
 import { Text, View } from '@/components/Themed';
 import { useBluetooth } from 'rn-bluetooth-classic';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,7 +9,10 @@ import base64 from 'react-native-base64';
 export default function TabTwoScreen() {
   const colorScheme = useColorScheme();
   const { connectedDevice, writeToDevice, receivedData } = useBluetooth();
-  const [data, setData] = useState('');
+  const [name, setName] = useState('');
+  const [motorPinA, setMotorPinA] = useState<number[]>([]);
+  const [motorPinB, setMotorPinB] = useState<number[]>([]);
+  const [incomingData, setIncomingData] = useState('');
 
   useEffect(() => {
     if (connectedDevice) {
@@ -23,9 +26,13 @@ export default function TabTwoScreen() {
       try {
         const trimmedData = receivedData.replace(/\n/g, ''); // Remove \n characters
         const decodedData = base64.decode(trimmedData);
-        setData(decodedData);
+        const parsedData = JSON.parse(decodedData);
+        setName(parsedData.name);
+        setMotorPinA(parsedData.motorPinA);
+        setMotorPinB(parsedData.motorPinB);
+        setIncomingData(JSON.stringify(parsedData, null, 2)); // Pretty print JSON
       } catch (error) {
-        console.error('Failed to decode received data', error);
+        console.error('Failed to decode or parse JSON:', error);
       }
     }
   }, [receivedData]);
@@ -38,15 +45,92 @@ export default function TabTwoScreen() {
     }
   };
 
+  const saveSettings = async () => {
+    const settings = {
+      name,
+      motorPinA,
+      motorPinB,
+    };
+    const settingsString = JSON.stringify(settings);
+    const encodedSettings = base64.encode(settingsString);
+    try {
+      await writeToDevice(connectedDevice?.address, `s/${encodedSettings}\n`, 'utf8');
+      Alert.alert('Success', 'Settings saved successfully');
+    } catch (error) {
+      console.error('Failed to save settings', error);
+      Alert.alert('Error', 'Failed to save settings');
+    }
+  };
+
+  const addMotor = () => {
+    if (motorPinA.length < 4 && motorPinB.length < 4) {
+      setMotorPinA([...motorPinA, -1]);
+      setMotorPinB([...motorPinB, -1]);
+    } else {
+      Alert.alert('Error', 'Maximum of 4 motors allowed');
+    }
+  };
+
+  const textColor = colorScheme === 'dark' ? 'white' : 'black';
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Settings</Text>
+        <Text style={[styles.title, { color: textColor }]}>Settings</Text>
         <TouchableOpacity onPress={fetchSettings} style={styles.refreshButton}>
-          <Ionicons name="refresh" size={24} color={colorScheme === 'dark' ? 'white' : 'black'} />
+          <Ionicons name="refresh" size={24} color={textColor} />
         </TouchableOpacity>
       </View>
-      <Text style={styles.data}>{data}</Text>
+      <View style={styles.nameContainer}>
+        <Text style={[styles.label, { color: textColor }]}>Name:</Text>
+        <TextInput
+          style={[styles.nameInput, { color: textColor }]}
+          placeholder="Name"
+          placeholderTextColor={textColor}
+          value={name}
+          onChangeText={setName}
+        />
+      </View>
+      <View style={styles.table}>
+        <View style={styles.tableHeader}>
+          <Text style={[styles.tableHeaderText, { color: textColor }]}>Motor</Text>
+          <Text style={[styles.tableHeaderText, { color: textColor }]}>Pin A</Text>
+          <Text style={[styles.tableHeaderText, { color: textColor }]}>Pin B</Text>
+        </View>
+        {motorPinA.map((pin, index) => (
+          <View key={index} style={styles.tableRow}>
+            <Text style={[styles.tableRowText, { color: textColor }]}>Motor {index + 1}</Text>
+            <TextInput
+              style={[styles.tableInput, { color: textColor }]}
+              placeholder={`Pin A`}
+              placeholderTextColor={textColor}
+              keyboardType="numeric"
+              value={pin.toString()}
+              onChangeText={(value) => {
+                const newMotorPinA = [...motorPinA];
+                newMotorPinA[index] = parseInt(value, 10);
+                setMotorPinA(newMotorPinA);
+              }}
+            />
+            <TextInput
+              style={[styles.tableInput, { color: textColor }]}
+              placeholder={`Pin B`}
+              placeholderTextColor={textColor}
+              keyboardType="numeric"
+              value={motorPinB[index].toString()}
+              onChangeText={(value) => {
+                const newMotorPinB = [...motorPinB];
+                newMotorPinB[index] = parseInt(value, 10);
+                setMotorPinB(newMotorPinB);
+              }}
+            />
+          </View>
+        ))}
+      </View>
+      <TouchableOpacity onPress={addMotor} style={styles.addButton}>
+        <Text style={styles.addButtonText}>Add Motor</Text>
+      </TouchableOpacity>
+      <Button title="Save Settings" onPress={saveSettings} />
     </View>
   );
 }
@@ -69,6 +153,65 @@ const styles = StyleSheet.create({
   },
   refreshButton: {
     padding: 10,
+  },
+  nameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  label: {
+    fontSize: 16,
+    marginRight: 10,
+  },
+  nameInput: {
+    height: 40,
+    borderColor: 'gray',
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    width: '50%',
+  },
+  table: {
+    width: '100%',
+    marginBottom: 20,
+  },
+  tableHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  tableHeaderText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    flex: 1,
+    textAlign: 'center',
+  },
+  tableRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  tableRowText: {
+    fontSize: 16,
+    flex: 1,
+    textAlign: 'center',
+  },
+  tableInput: {
+    height: 40,
+    borderColor: 'gray',
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    flex: 1,
+    textAlign: 'center',
+  },
+  addButton: {
+    backgroundColor: '#007BFF',
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 20,
+  },
+  addButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
   },
   data: {
     marginTop: 20,
