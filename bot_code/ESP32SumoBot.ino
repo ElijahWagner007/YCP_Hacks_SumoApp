@@ -145,6 +145,20 @@ void loop() {
       file.close();
     } else if (message.startsWith("r")){
       ESP.restart();
+    } else if (message.startsWith("g")) {
+      // Read the contents of settings.json
+      File file = SPIFFS.open("/settings.json", "r");
+      if (!file) {
+        Serial.println("Failed to open settings.json");
+        return;
+      }
+
+      String settingsContent = file.readString();
+      file.close();
+
+      // Send the contents back to the connected Bluetooth device
+      SerialBT.println(settingsContent);
+      Serial.println("Sent settings.json content");
     }
   }
   delay(20);
